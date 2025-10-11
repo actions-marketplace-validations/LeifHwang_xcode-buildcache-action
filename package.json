@@ -19,10 +19,7 @@
     "debug-restore": "node ./src/restore.js",
     "debug-save": "node ./src/save.js",
     "clean": "rimraf ./dist",
-    "package-file": "rollup -c",
-    "package-restore": "npm run package-file dist/restore src/restore.js",
-    "package-save": "npm run package-file dist/save src/save.js",
-    "package": "npm run package-restore && npm run  package-save"
+    "package": "rollup -c"
   },
   "author": "Leif Hwang",
   "license": "MIT",

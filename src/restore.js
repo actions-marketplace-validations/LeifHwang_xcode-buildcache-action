@@ -45,10 +45,9 @@ async function download() {
   if (!version) throw Error('version is undefined');
 
   const downloadUrl = `https://gitlab.com/bits-n-bites/buildcache/-/releases/${version}/downloads/${filename}`;
-
-  const downloadPath = await toolCache.downloadTool(downloadUrl);
   logger.info(`download path: ${downloadPath}`);
 
+  const downloadPath = await toolCache.downloadTool(downloadUrl);
   return downloadPath;
 }
 
