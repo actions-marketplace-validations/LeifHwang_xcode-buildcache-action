@@ -38,7 +38,7 @@ async function getLatestVersion() {
 async function download() {
   const filename = 'buildcache-macos.zip';
   let version = core.getInput('version');
-  if (!version) {
+  if (!version || version === 'latest') {
     version = await getLatestVersion();
   }
 
