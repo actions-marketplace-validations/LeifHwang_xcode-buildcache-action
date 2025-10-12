@@ -955,28 +955,16 @@ var toolCacheExports = requireToolCache();
 
 const { logger } = utils;
 
-async function getLatestVersion() {
+const _gitlabUrl = 'https://gitlab.com/bits-n-bites/buildcache/-/releases';
+
+async function getLatestUrl() {
   try {
-    const resp = await fetch('https://gitlab.com/api/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        operationName: 'allReleases',
-        variables: {
-          fullPath: 'bits-n-bites/buildcache',
-          first: 1,
-          sort: 'RELEASED_AT_DESC'
-        },
-        query:
-          'query allReleases($fullPath: ID!, $first: Int, $last: Int, $before: String, $after: String, $sort: ReleaseSort) {\n  project(fullPath: $fullPath) {\n    id\n    releases(\n      first: $first\n      last: $last\n      before: $before\n      after: $after\n      sort: $sort\n    ) {\n      nodes {\n        ...Release\n        __typename\n      }\n      pageInfo {\n        startCursor\n        hasPreviousPage\n        hasNextPage\n        endCursor\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment Release on Release {\n  id\n  name\n  tagName\n  tagPath\n  descriptionHtml\n  releasedAt\n  createdAt\n  upcomingRelease\n  historicalRelease\n  assets {\n    count\n    sources {\n      nodes {\n        format\n        url\n        __typename\n      }\n      __typename\n    }\n    links {\n      nodes {\n        id\n        name\n        url\n        directAssetUrl\n        linkType\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  evidences {\n    nodes {\n      id\n      filepath\n      collectedAt\n      sha\n      __typename\n    }\n    __typename\n  }\n  links {\n    editUrl\n    selfUrl\n    openedIssuesUrl\n    closedIssuesUrl\n    openedMergeRequestsUrl\n    mergedMergeRequestsUrl\n    closedMergeRequestsUrl\n    __typename\n  }\n  commit {\n    id\n    sha\n    webUrl\n    title\n    __typename\n  }\n  author {\n    id\n    webUrl\n    avatarUrl\n    username\n    __typename\n  }\n  milestones {\n    nodes {\n      id\n      title\n      description\n      webPath\n      stats {\n        totalIssuesCount\n        closedIssuesCount\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}'
-      })
-    });
-    const { data } = await resp.json();
-    const latest = data.project.releases.nodes[0].tagName;
+    const resp = await fetch(`${_gitlabUrl}/permalink/latest`, { redirect: 'manual' });
+    const location = resp.headers.get('location');
 
-    logger.info(`got latest version: ${latest}`);
+    logger.info(`got gitlab latest release url: ${location}`);
 
-    return latest;
+    return location;
   } catch (error) {
     return undefined;
   }
@@ -984,14 +972,16 @@ async function getLatestVersion() {
 
 async function download() {
   const filename = 'buildcache-macos.zip';
-  let version = coreExports.getInput('version');
+
+  const version = coreExports.getInput('version');
+  let downloadUrl = `${_gitlabUrl}/${version}/downloads/${filename}`;
   if (!version || version === 'latest') {
-    version = await getLatestVersion();
+    const url = await getLatestUrl();
+    if (!url) throw Error('fetch latest release info error');
+
+    downloadUrl = `${url}/downloads/${filename}`;
   }
 
-  if (!version) throw Error('version is undefined');
-
-  const downloadUrl = `https://gitlab.com/bits-n-bites/buildcache/-/releases/${version}/downloads/${filename}`;
   logger.info(`download url: ${downloadUrl}`);
 
   const downloadPath = await toolCacheExports.downloadTool(downloadUrl);

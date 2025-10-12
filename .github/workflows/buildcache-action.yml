@@ -1,0 +1,11 @@
+name: 'buildcache-action'
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: mikehardy/buildcache-action@v2
